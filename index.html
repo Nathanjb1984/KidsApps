@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tony's Math Race App 🏎️</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #0f172a;
+      background: radial-gradient(circle at top, #e0f2fe, #fdf2ff 40%, #fef9c3 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-root {
+      padding: 24px;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 24px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+      border: 3px solid #38bdf8;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.25), transparent 60%),
+        radial-gradient(circle at top right, rgba(244, 114, 182, 0.2), transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .game-header {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 2.2rem;
+      margin: 0;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .title-emoji {
+      font-size: 2.4rem;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      color: #475569;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      margin: 12px 0 8px;
+    }
+
+    .difficulty-select {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.95rem;
+      color: #0f172a;
+      background: rgba(248, 250, 252, 0.95);
+      border-radius: 999px;
+      padding: 6px 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .difficulty-select select {
+      border-radius: 999px;
+      border: 1px solid #cbd5f5;
+      padding: 4px 8px;
+      font-size: 0.9rem;
+      outline: none;
+      background: white;
+    }
+
+    .start-button {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.5);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+
+    .start-button:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 10px 24px rgba(22, 163, 74, 0.65);
+      filter: brightness(1.05);
+    }
+
+    .start-button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.5);
+    }
+
+    .track-wrapper {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin: 10px auto 16px;
+    }
+
+    .track {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 12px solid #374151;
+      box-shadow: inset 0 0 0 4px #9ca3af;
+      background: radial-gradient(circle, #e5e7eb 20%, #111827 20%, #111827 21%, #e5e7eb 21%);
+    }
+
+    .track::before {
+      content: "";
+      position: absolute;
+      inset: 32px;
+      border-radius: 50%;
+      border: 2px dashed #facc15;
+      opacity: 0.9;
+    }
+
+    .car {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 34px;
+      height: 18px;
+      background: linear-gradient(90deg, #ef4444, #fb923c);
+      border-radius: 6px;
+      box-shadow: 0 0 6px rgba(248, 113, 113, 0.9);
+      transform-origin: center center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 2px solid white;
+    }
+
+    .car::before {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 10px;
+      border-radius: 3px;
+      background: #111827;
+      top: -4px;
+      left: 4px;
+      box-shadow: 16px 0 0 #111827;
+    }
+
+    .car::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.9);
+      right: -4px;
+      top: 4px;
+      box-shadow: 0 10px 0 rgba(96, 165, 250, 0.9);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background: rgba(248, 250, 252, 0.9);
+      border-radius: 16px;
+      padding: 8px 10px;
+      text-align: center;
+      border: 2px solid #e2e8f0;
+    }
+
+    .stat-score {
+      border-color: #4ade80;
+      background: rgba(187, 247, 208, 0.4);
+    }
+
+    .stat-laps {
+      border-color: #facc15;
+      background: rgba(254, 243, 199, 0.6);
+    }
+
+    .stat-streak {
+      border-color: #fb923c;
+      background: rgba(254, 215, 170, 0.6);
+    }
+
+    .stat-timer {
+      border-color: #60a5fa;
+      background: rgba(191, 219, 254, 0.6);
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #475569;
+      letter-spacing: 0.06em;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .high-score {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #4b5563;
+      margin-bottom: 8px;
+    }
+
+    .question-box {
+      margin-top: 4px;
+      margin-bottom: 10px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: linear-gradient(90deg, #22c55e, #38bdf8);
+      color: white;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+
+    .question-box.correct {
+      filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.6));
+    }
+
+    .question-box.wrong {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      box-shadow: 0 8px 24px rgba(248, 113, 113, 0.6);
+    }
+
+    .question-label {
+      margin: 0 0 4px;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .question-text {
+      margin: 0;
+      font-size: 2.05rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .question-text .number {
+      text-shadow: 0 2px 4px rgba(15, 23, 42, 0.4);
+    }
+
+    .question-text .op {
+      font-size: 1.8rem;
+      text-shadow: 0 2px 4px rgba(15, 23, 42, 0.4);
+    }
+
+    .question-text .question-mark {
+      font-size: 2.4rem;
+      text-shadow: 0 2px 6px rgba(15, 23, 42, 0.7);
+    }
+
+    .answer-form {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      margin-bottom: 8px;
+      margin-top: 6px;
+    }
+
+    .answer-input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 2px solid #cbd5f5;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+    }
+
+    .answer-input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .answer-button {
+      padding: 10px 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.5);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+
+    .answer-button:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 10px 24px rgba(22, 163, 74, 0.65);
+      filter: brightness(1.05);
+    }
+
+    .answer-button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.5);
+    }
+
+    .message-box {
+      background: rgba(248, 250, 252, 0.96);
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      font-size: 0.95rem;
+      color: #111827;
+      margin-bottom: 4px;
+      min-height: 2.4em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .footer {
+      font-size: 0.8rem;
+      color: #64748b;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 640px) {
+      .game-card {
+        padding: 18px 14px 14px;
+      }
+      .title {
+        font-size: 1.7rem;
+      }
+      .question-text {
+        font-size: 1.7rem;
+      }
+      .answer-form {
+        flex-direction: column;
+      }
+      .answer-button {
+        width: 100%;
+      }
+      .track-wrapper {
+        width: 220px;
+        height: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-root">
+    <div class="game-card">
+      <header class="game-header">
+        <h1 class="title">
+          <span class="title-emoji">🏎️</span>
+          Tony's Math Race App
+        </h1>
+        <p class="subtitle">Answer questions to drive around the track before the timer ends! 🧠⚡</p>
+      </header>
+
+      <div class="controls-row">
+        <div class="difficulty-select">
+          <span>Difficulty:</span>
+          <select id="difficulty-select">
+            <option value="easy">Easy (Add only)</option>
+            <option value="medium">Medium (Add + Multiply)</option>
+            <option value="hard">Hard (Add + Multiply + Divide)</option>
+          </select>
+        </div>
+        <button class="start-button" id="start-button">
+          🚦 Start Race
+        </button>
+      </div>
+
+      <div class="track-wrapper">
+        <div class="track"></div>
+        <div class="car" id="car">T</div>
+      </div>
+
+      <section class="stats-row">
+        <div class="stat-box stat-score">
+          <span class="stat-label">Score</span>
+          <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat-box stat-laps">
+          <span class="stat-label">Laps</span>
+          <span class="stat-value" id="laps">0</span>
+        </div>
+        <div class="stat-box stat-streak">
+          <span class="stat-label">Streak</span>
+          <span class="stat-value" id="streak">0 🔥</span>
+        </div>
+        <div class="stat-box stat-timer">
+          <span class="stat-label">Timer</span>
+          <span class="stat-value" id="timer">0s</span>
+        </div>
+      </section>
+
+      <div class="high-score">
+        <span id="high-score-text">No high score yet. Start a race! 🏁</span>
+      </div>
+
+      <section class="question-box" id="question-box">
+        <p class="question-label">Solve this one to speed up:</p>
+        <p class="question-text">
+          <span class="number" id="numA">?</span>
+          <span class="op" id="op">+</span>
+          <span class="number" id="numB">?</span>
+          <span class="op">=</span>
+          <span class="question-mark">?</span>
+        </p>
+      </section>
+
+      <form class="answer-form" id="answer-form">
+        <input
+          type="number"
+          class="answer-input"
+          id="answer-input"
+          placeholder="Type your answer here"
+          autocomplete="off"
+        />
+        <button type="submit" class="answer-button">✅ Check Answer</button>
+      </form>
+
+      <section class="message-box">
+        <p id="message">Pick a difficulty and press "Start Race" to begin! 🏁</p>
+      </section>
+
+      <footer class="footer">
+        <p>Correct answers move your car. Finish as many laps as you can before the timer hits zero!</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // ---------------------------
+    // Helpers
+    // ---------------------------
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Difficulty → which operations are allowed
+    function getOpsForDifficulty(diff) {
+      if (diff === "easy") return ["add"];
+      if (diff === "medium") return ["add", "mul"];
+      return ["add", "mul", "div"]; // hard
+    }
+
+    // Difficulty → time limit in seconds
+    function getTimeLimit(diff) {
+      if (diff === "easy") return 60;
+      if (diff === "medium") return 60;
+      return 45; // hard
+    }
+
+    function opSymbol(op) {
+      if (op === "add") return "+";
+      if (op === "mul") return "×";
+      return "÷";
+    }
+
+    function generateQuestion(difficulty) {
+      const ops = getOpsForDifficulty(difficulty);
+      const op = ops[randomInt(0, ops.length - 1)];
+
+      if (op === "add") {
+        const a = randomInt(1, difficulty === "hard" ? 100 : 50);
+        const b = randomInt(1, difficulty === "hard" ? 100 : 50);
+        return { a, b, op, answer: a + b };
+      }
+
+      if (op === "mul") {
+        const max = difficulty === "hard" ? 15 : 12;
+        const a = randomInt(2, max);
+        const b = randomInt(2, max);
+        return { a, b, op, answer: a * b };
+      }
+
+      // division with whole-number result
+      const divisor = randomInt(2, difficulty === "hard" ? 15 : 12);
+      const result = randomInt(2, difficulty === "hard" ? 15 : 12);
+      const dividend = divisor * result;
+      return { a: dividend, b: divisor, op: "div", answer: result };
+    }
+
+    // ---------------------------
+    // Sound engine (Web Audio)
+    // ---------------------------
+    let audioCtx = null;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      return audioCtx;
+    }
+
+    function playBeep(frequency, durationMs) {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = frequency;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+
+      osc.start(now);
+      osc.stop(now + durationMs / 1000);
+    }
+
+    function playCorrectSound() {
+      // happy little "ding-ding"
+      playBeep(880, 180);
+      setTimeout(() => playBeep(1320, 180), 160);
+    }
+
+    function playWrongSound() {
+      // low "wah"
+      playBeep(260, 260);
+    }
+
+    // ---------------------------
+    // Race car + game state
+    // ---------------------------
+    const numAEl = document.getElementById("numA");
+    const numBEl = document.getElementById("numB");
+    const opEl = document.getElementById("op");
+    const scoreEl = document.getElementById("score");
+    const lapsEl = document.getElementById("laps");
+    const streakEl = document.getElementById("streak");
+    const timerEl = document.getElementById("timer");
+    const messageEl = document.getElementById("message");
+    const answerInput = document.getElementById("answer-input");
+    const answerForm = document.getElementById("answer-form");
+    const questionBox = document.getElementById("question-box");
+    const startButton = document.getElementById("start-button");
+    const difficultySelect = document.getElementById("difficulty-select");
+    const highScoreText = document.getElementById("high-score-text");
+    const carEl = document.getElementById("car");
+
+    let currentQuestion = null;
+    let currentDifficulty = "easy";
+
+    let score = 0;
+    let streak = 0;
+    let laps = 0;
+    let questionsAnswered = 0;
+
+    let timerRemaining = 0;
+    let timerIntervalId = null;
+    let gameActive = false;
+
+    // race car angle (0 = starting on the right side)
+    let carAngle = 0;
+    const CAR_RADIUS = 110; // px
+    const ANGLE_PER_CORRECT = 30; // 12 correct answers ≈ full lap (360/30)
+
+    let highScore = { score: 0, laps: 0 };
+
+    function updateCarPosition() {
+      // rotate around center and move outwards, then rotate car to face "forward"
+      carEl.style.transform =
+        "rotate(" + carAngle + "deg) translate(" + CAR_RADIUS + "px) rotate(90deg)";
+    }
+
+    function moveCarForward() {
+      carAngle += ANGLE_PER_CORRECT;
+      if (carAngle >= 360) {
+        carAngle -= 360;
+        laps += 1;
+      }
+      updateCarPosition();
+    }
+
+    function setMessage(text) {
+      messageEl.textContent = text;
+    }
+
+    function updateStatsUI() {
+      scoreEl.textContent = String(score);
+      lapsEl.textContent = String(laps);
+      streakEl.textContent = streak + " 🔥";
+      timerEl.textContent = timerRemaining + "s";
+    }
+
+    function praiseMessage(streakValue) {
+      if (streakValue >= 10) return "You’re on FIRE, Math Legend! 🔥🔥🔥";
+      if (streakValue >= 7) return "Unstoppable! Your brain is a superpower! ⚡";
+      if (streakValue >= 5) return "Wow! Super strong brain muscles! 💪";
+      if (streakValue >= 3) return "Nice streak, keep going! ⭐";
+      return "Great job! You got it right! 🎉";
+    }
+
+    function askNewQuestion() {
+      currentDifficulty = difficultySelect.value;
+      currentQuestion = generateQuestion(currentDifficulty);
+      numAEl.textContent = currentQuestion.a;
+      numBEl.textContent = currentQuestion.b;
+      opEl.textContent = opSymbol(currentQuestion.op);
+      questionBox.classList.remove("correct", "wrong");
+      answerInput.value = "";
+      answerInput.focus();
+    }
+
+    function resetGameStateForNewRace() {
+      score = 0;
+      streak = 0;
+      laps = 0;
+      questionsAnswered = 0;
+      carAngle = 0;
+      updateCarPosition();
+    }
+
+    function loadHighScore() {
+      try {
+        const stored = localStorage.getItem("tonyMathRaceHighScore");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed.score === "number" && typeof parsed.laps === "number") {
+            highScore = parsed;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      updateHighScoreUI(false);
+    }
+
+    function updateHighScoreUI(isNew) {
+      if (highScore.score === 0 && highScore.laps === 0) {
+        highScoreText.textContent = "No high score yet. Start a race! 🏁";
+        return;
+      }
+      highScoreText.textContent =
+        "High Score: " +
+        highScore.score +
+        " pts, " +
+        highScore.laps +
+        " lap(s)" +
+        (isNew ? " 🏆 NEW!" : "");
+    }
+
+    function maybeUpdateHighScore() {
+      if (
+        score > highScore.score ||
+        (score === highScore.score && laps > highScore.laps)
+      ) {
+        highScore.score = score;
+        highScore.laps = laps;
+        try {
+          localStorage.setItem("tonyMathRaceHighScore", JSON.stringify(highScore));
+        } catch {
+          // ignore
+        }
+        updateHighScoreUI(true);
+      } else {
+        updateHighScoreUI(false);
+      }
+    }
+
+    function endRace() {
+      gameActive = false;
+      if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+      }
+      setMessage(
+        "Race over! You did " +
+          laps +
+          " lap(s) and scored " +
+          score +
+          " points. Awesome driving, Tony! 🏁"
+      );
+      maybeUpdateHighScore();
+    }
+
+    function startRace() {
+      currentDifficulty = difficultySelect.value;
+      resetGameStateForNewRace();
+      timerRemaining = getTimeLimit(currentDifficulty);
+      gameActive = true;
+      if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+      }
+      updateStatsUI();
+      setMessage(
+        "Race started! Answer quickly to zoom around the track! 🏎️💨"
+      );
+      askNewQuestion();
+
+      timerIntervalId = setInterval(function () {
+        timerRemaining -= 1;
+        if (timerRemaining < 0) {
+          timerRemaining = 0;
+        }
+        timerEl.textContent = timerRemaining + "s";
+        if (timerRemaining <= 0) {
+          endRace();
+        }
+      }, 1000);
+    }
+
+    // ---------------------------
+    // Event listeners
+    // ---------------------------
+    answerForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!gameActive) {
+        setMessage('Press "Start Race" to begin the timer! 🚦');
+        return;
+      }
+
+      if (!currentQuestion) {
+        askNewQuestion();
+        return;
+      }
+
+      const raw = answerInput.value.trim();
+      if (raw === "") {
+        setMessage("Type a number, speed racer! 😄");
+        return;
+      }
+
+      const userAnswer = Number(raw);
+      if (Number.isNaN(userAnswer)) {
+        setMessage("That doesn’t look like a number. Try again! 🤔");
+        return;
+      }
+
+      questionsAnswered += 1;
+
+      if (userAnswer === currentQuestion.answer) {
+        score += 1;
+        streak += 1;
+        playCorrectSound();
+        questionBox.classList.add("correct");
+        questionBox.classList.remove("wrong");
+        setMessage(praiseMessage(streak));
+        moveCarForward();
+        updateStatsUI();
+        setTimeout(askNewQuestion, 300);
+      } else {
+        streak = 0;
+        playWrongSound();
+        questionBox.classList.add("wrong");
+        questionBox.classList.remove("correct");
+        setMessage(
+          "Nice try! The answer was " +
+            currentQuestion.answer +
+            ". You can nail the next one! 💚"
+        );
+        updateStatsUI();
+        setTimeout(askNewQuestion, 550);
+      }
+    });
+
+    startButton.addEventListener("click", function () {
+      startRace();
+    });
+
+    // Wake up AudioContext on first user interaction
+    document.addEventListener(
+      "click",
+      function () {
+        ensureAudio();
+      },
+      { once: true }
+    );
+
+    // ---------------------------
+    // Init
+    // ---------------------------
+    loadHighScore();
+    updateCarPosition();
+    askNewQuestion();
+    timerEl.textContent = "0s";
+  </script>
+</body>
+</html>
